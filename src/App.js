@@ -11,6 +11,8 @@ function App() {
 
   // Estado de los recursos disponibles iniciales
   const [recursosDisponibles, setRecursosDisponibles] = useState(0);
+  const [totalRecursosSistema, setTotalRecursosSistema] = useState(0);
+  const [maximoTotal, setMaximoTotal] = useState(0); // Nuevo estado para el Máximo Total
   const [mensajes, setMensajes] = useState([]);
   const [datosGenerados, setDatosGenerados] = useState(false);
 
@@ -48,15 +50,17 @@ function App() {
     setDatosGenerados(true);
 
     // Calcular el total de recursos en el sistema (recursos disponibles + suma de recursos asignados)
-    const totalRecursosSistema = recursosDisponiblesIniciales + nuevosProcesos.reduce((total, proceso) => total + proceso.asignados, 0);
+    const totalRecursos = recursosDisponiblesIniciales + nuevosProcesos.reduce((total, proceso) => total + proceso.asignados, 0);
+    setTotalRecursosSistema(totalRecursos); // Guardar en el estado
 
-    // Calcular la necesidad máxima total
-    const maximoTotal = nuevosProcesos.reduce((total, proceso) => total + proceso.maximo, 0);
+    // Calcular el valor máximo entre las necesidades máximas de todos los procesos
+    const maximoNecesidad = Math.max(...nuevosProcesos.map(proceso => proceso.maximo));
+    setMaximoTotal(maximoNecesidad); // Guardar en el estado `maximoTotal`
 
     // Verificar si la necesidad máxima total excede los recursos totales del sistema
-    if (maximoTotal > totalRecursosSistema) {
+    if (maximoNecesidad > totalRecursos) {
       setMensajes([
-        '⚠️ Advertencia: La necesidad máxima total de los procesos excede la cantidad total de recursos en el sistema.',
+        '⚠️ Advertencia: La necesidad máxima de algún proceso excede la cantidad total de recursos en el sistema.',
         'Esto significa que algún proceso podría quedar bloqueado inevitablemente.',
       ]);
     } else {
@@ -85,7 +89,7 @@ function App() {
         
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} sale y devuelve ${proceso.maximo} recursos. Recursos actuales: ${recursos}`);
       } else {
-        // Proceso espera si no hay suficientes recursos (Una forma de saber si hay un error ya que se bloqueó y es lo que se debe evitar)
+        // Proceso espera si no hay suficientes recursos
         nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
       }
     });
@@ -132,6 +136,8 @@ function App() {
       </table>
 
       <h3>Recursos Disponibles Iniciales: {recursosDisponibles}</h3>
+      <h3>Total de Recursos en el Sistema: {totalRecursosSistema}</h3>
+      <h3>Máximo Total Necesario: {maximoTotal}</h3> {/* Nueva línea para mostrar el máximo total */}
 
       <h2>Estado de Simulación</h2>
       <div className="simulacion">
