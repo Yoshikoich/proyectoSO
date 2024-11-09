@@ -47,13 +47,16 @@ function App() {
     setRecursosDisponibles(recursosDisponiblesIniciales);
     setDatosGenerados(true);
 
-    // Calcular el total de recursos necesarios
+    // Calcular el total de recursos en el sistema (recursos disponibles + suma de recursos asignados)
+    const totalRecursosSistema = recursosDisponiblesIniciales + nuevosProcesos.reduce((total, proceso) => total + proceso.asignados, 0);
+
+    // Calcular la necesidad máxima total
     const maximoTotal = nuevosProcesos.reduce((total, proceso) => total + proceso.maximo, 0);
-    
-    // Verificar si la necesidad máxima total excede los recursos disponibles iniciales
-    if (maximoTotal > recursosDisponiblesIniciales) {
+
+    // Verificar si la necesidad máxima total excede los recursos totales del sistema
+    if (maximoTotal > totalRecursosSistema) {
       setMensajes([
-        '⚠️ Advertencia: La necesidad máxima total de los procesos excede los recursos disponibles.',
+        '⚠️ Advertencia: La necesidad máxima total de los procesos excede la cantidad total de recursos en el sistema.',
         'Esto significa que algún proceso podría quedar bloqueado inevitablemente.',
       ]);
     } else {
@@ -82,7 +85,7 @@ function App() {
         
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} sale y devuelve ${proceso.maximo} recursos. Recursos actuales: ${recursos}`);
       } else {
-        // Proceso espera si no hay suficientes recursos
+        // Proceso espera si no hay suficientes recursos (Una forma de saber si hay un error ya que se bloqueó y es lo que se debe evitar)
         nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
       }
     });
