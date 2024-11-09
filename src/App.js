@@ -83,11 +83,11 @@ function App() {
     <div className="App">
       {/* Header */}
       <header className="header">
-        <img src="https://via.placeholder.com/50" alt="Logo de la universidad" className="logo" />
-        <p className="membrete">Universidad de Ejemplo - Facultad de Ingeniería - Algoritmos y Sistemas</p>
+        <img src="https://www.uny.edu.ve/wp-content/uploads/2015/11/logo-universidad-yacambu.png" alt="Logo de la universidad" className="logo" />
+        <p className="membrete">Universidad de Yacambu - Facultad de Ingeniería - Sistemas Operativos Noviembre 2024</p>
       </header>
 
-      <h1>Algoritmo del Banquero - Prevención de Bloqueos</h1>
+      <h1>Proyecto: Prevención de Bloqueos</h1>
 
       <button onClick={generarDatos}>Generar Datos</button>
       <button onClick={comenzarSimulacion} disabled={!datosGenerados}>
