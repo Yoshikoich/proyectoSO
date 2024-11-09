@@ -2,113 +2,124 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  const [processes, setProcesses] = useState([
-    { name: 'A', assigned: 0, maxNeed: 0, difference: 0 },
-    { name: 'B', assigned: 0, maxNeed: 0, difference: 0 },
-    { name: 'C', assigned: 0, maxNeed: 0, difference: 0 },
+  // Estados iniciales de los procesos y recursos
+  const [procesos, setProcesos] = useState([
+    { nombre: 'A', asignados: 0, maximo: 0, diferencia: 0 },
+    { nombre: 'B', asignados: 0, maximo: 0, diferencia: 0 },
+    { nombre: 'C', asignados: 0, maximo: 0, diferencia: 0 },
   ]);
-  const [availableResources, setAvailableResources] = useState(0); // Variable para recursos disponibles
-  const [message, setMessage] = useState('');
-  const [simulationLog, setSimulationLog] = useState([]);
-  
-  // Generación de datos aleatorios únicos
-  const generateData = () => {
-    const assignedResources = processes.map(() => Math.floor(Math.random() * 3) + 1); // Recursos asignados entre 1 y 3
-    const maxNeeds = Array.from(new Set([4, 5, 6])).sort(() => 0.5 - Math.random()); // Valores únicos de Necesidad Máxima
 
-    // Recalcular la diferencia y generar la tabla
-    const newProcesses = processes.map((process, index) => ({
-      ...process,
-      assigned: assignedResources[index],
-      maxNeed: maxNeeds[index],
-      difference: maxNeeds[index] - assignedResources[index]
-    }));
+  // Estado de los recursos disponibles iniciales, independientes de los recursos asignados
+  const [recursosDisponibles, setRecursosDisponibles] = useState(0);
 
-    // Genera un valor aleatorio de recursos disponibles entre 0 y 5
-    const randomAvailable = Math.floor(Math.random() * 6);
-    setAvailableResources(randomAvailable);
-    
-    // Comprobar si se cumplen las condiciones para algún proceso
-    const valid = newProcesses.some(process => process.difference <= randomAvailable);
-    setMessage(valid ? "✅ Datos generados y condiciones cumplidas" : "❌ Las condiciones no se cumplen");
-    setProcesses(newProcesses);
-    setSimulationLog([]); // Limpia el log de simulación
+  // Estado para almacenar mensajes de simulación y resultados
+  const [mensajes, setMensajes] = useState([]);
+  const [datosGenerados, setDatosGenerados] = useState(false);
+
+  // Función para generar valores aleatorios únicos para la "Necesidad Máxima" de cada proceso
+  function generarValoresUnicos() {
+    const valoresUnicos = new Set();
+    while (valoresUnicos.size < 3) {
+      valoresUnicos.add(Math.floor(Math.random() * 5) + 3); // Genera valores entre 3 y 7
+    }
+    return Array.from(valoresUnicos);
+  }
+
+  // Función para generar los datos de los procesos y los recursos iniciales
+  const generarDatos = () => {
+    const maximos = generarValoresUnicos(); // Genera valores únicos para 'Necesidad Máxima'
+    const nuevosProcesos = procesos.map((proceso, index) => {
+      const asignados = Math.floor(Math.random() * maximos[index]);
+      const diferencia = maximos[index] - asignados;
+      return {
+        ...proceso,
+        asignados,
+        maximo: maximos[index],
+        diferencia,
+      };
+    });
+
+    // Genera un valor aleatorio para recursos disponibles independiente de los asignados
+    const recursosDisponiblesIniciales = Math.floor(Math.random() * 6); // Valores entre 0 y 5
+    setProcesos(nuevosProcesos);
+    setRecursosDisponibles(recursosDisponiblesIniciales);
+    setDatosGenerados(true);
+    setMensajes(['✅ Datos generados y condiciones cumplidas']);
   };
 
-  // Simulación de prevención de bloqueos
-  const startSimulation = () => {
-    let resources = availableResources;
-    const log = [];
-    const processQueue = [...processes].sort((a, b) => a.maxNeed - b.maxNeed); // Ordena por necesidad máxima
+  // Función para simular el algoritmo del banquero
+  const comenzarSimulacion = () => {
+    let recursos = recursosDisponibles; // Copia de recursos disponibles para manipular en el ciclo
+    const colaProcesos = [...procesos].sort((a, b) => a.maximo - b.maximo); // Ordena procesos por necesidad máxima
+    const nuevosMensajes = [];
 
-    processQueue.forEach(process => {
-      if (process.difference <= resources) {
-        // Proceso puede entrar
-        log.push(`🟢 Otorgando recursos al proceso ${process.name}: ${resources} - ${process.difference} = ${resources - process.difference}`);
-        resources -= process.difference;
-
-        // Estado "READY"
-        log.push(`⚙️ Proceso ${process.name} - READY`);
-
-        // Proceso sale y devuelve sus recursos
-        log.push(`🔄 Devolviendo recursos del proceso ${process.name}: ${resources} + ${process.maxNeed} = ${resources + process.maxNeed}`);
-        resources += process.maxNeed;
+    colaProcesos.forEach((proceso) => {
+      if (proceso.diferencia <= recursos) {
+        // El proceso puede entrar porque su diferencia es menor o igual a los recursos disponibles
+        nuevosMensajes.push(`🟢 Otorgando recursos al proceso ${proceso.nombre} (Recursos Disponibles: ${recursos} - Diferencia: ${proceso.diferencia})`);
+        
+        // Reducimos los recursos disponibles
+        recursos -= proceso.diferencia;
+        
+        // Proceso 'entra' y libera sus recursos máximos al salir
+        nuevosMensajes.push(`🟢 READY - Proceso ${proceso.nombre} está en ejecución.`);
+        
+        nuevosMensajes.push(`🔄 Devolviendo recursos de ${proceso.nombre} (Recursos Disponibles: ${recursos} + Necesidad Máxima: ${proceso.maximo})`);
+        
+        // Incrementamos los recursos disponibles cuando el proceso sale
+        recursos += proceso.maximo;
       } else {
-        // Proceso no puede entrar, espera
-        log.push(`🟡 Proceso ${process.name} - Esperando (Diferencia: ${process.difference}, Recursos Disponibles: ${resources})`);
+        // El proceso espera ya que no hay recursos suficientes
+        nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Esperando`);
       }
     });
 
-    // Actualización de logs y mensaje final
-    log.push("✅ Todos los procesos han sido procesados.");
-    setSimulationLog(log);
-    setAvailableResources(resources); // Actualiza el estado final de recursos disponibles
+    nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
+    setMensajes(nuevosMensajes);
   };
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Algoritmo del Banquero - Prevención de Bloqueos</h1>
-      </header>
-      
-      <div className="controls">
-        <button onClick={generateData}>Generar Datos</button>
-        <button onClick={startSimulation}>Empezar Prevención de Bloques</button>
-      </div>
-      
-      <div className="table-section">
-        <h2>Tabla de Procesos</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Proceso</th>
-              <th>Recursos Asignados</th>
-              <th>Necesidad Máxima</th>
-              <th>Diferencia</th>
+      <h1>Algoritmo del Banquero - Prevención de Bloqueos</h1>
+
+      {/* Botones de acciones */}
+      <button onClick={generarDatos}>Generar Datos</button>
+      <button onClick={comenzarSimulacion} disabled={!datosGenerados}>
+        Empezar Prevención de Bloqueos
+      </button>
+
+      {/* Tabla de procesos */}
+      <h2>Tabla de Procesos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Proceso</th>
+            <th>Recursos Asignados</th>
+            <th>Necesidad Máxima</th>
+            <th>Diferencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {procesos.map((proceso, index) => (
+            <tr key={index}>
+              <td>{proceso.nombre}</td>
+              <td>{proceso.asignados}</td>
+              <td>{proceso.maximo}</td>
+              <td>{proceso.diferencia}</td>
             </tr>
-          </thead>
-          <tbody>
-            {processes.map((process, index) => (
-              <tr key={index}>
-                <td>{process.name}</td>
-                <td>{process.assigned}</td>
-                <td>{process.maxNeed}</td>
-                <td>{process.difference}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      <div className="status">
-        <h2>Estado de Simulación</h2>
-        <p>Recursos Disponibles Iniciales: {availableResources}</p>
-        <p>{message}</p>
-        <div className="simulation-log">
-          {simulationLog.map((entry, index) => (
-            <p key={index}>{entry}</p>
           ))}
-        </div>
+        </tbody>
+      </table>
+
+      {/* Mostramos los recursos disponibles iniciales generados */}
+      <h3>Recursos Disponibles Iniciales: {recursosDisponibles}</h3>
+
+      {/* Mensajes de simulación */}
+      <h2>Estado de Simulación</h2>
+      <div className="simulacion">
+        {mensajes.map((mensaje, index) => (
+          <p key={index}>{mensaje}</p>
+        ))}
       </div>
     </div>
   );
