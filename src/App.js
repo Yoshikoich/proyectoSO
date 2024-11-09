@@ -37,6 +37,20 @@ function App() {
       };
     });
 
+     // Calcular el total de recursos necesarios
+     const maximoTotal = nuevosProcesos.reduce((total, proceso) => total + proceso.maximo, 0);
+    
+     // Verificar si la necesidad máxima total excede los recursos disponibles iniciales
+     if (maximoTotal > recursosDisponiblesIniciales) {
+       setMensajes([
+         '⚠️ La necesidad máxima total de los procesos excede los recursos disponibles.',
+         'No se podrá realizar la prevención de bloqueo.',
+       ]);
+     } else {
+       setMensajes(['✅ Datos generados y condiciones revisadas']);
+     }
+   };
+
     // Generar recursos disponibles y asegurar la condición de disponibilidad
     let recursosDisponiblesIniciales;
     do {
