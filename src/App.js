@@ -3,15 +3,16 @@ import './App.css';
 
 function App() {
   const [procesos, setProcesos] = useState([
-    { nombre: 'A', asignados: 0, maximo: 0, diferencia: 0 },
-    { nombre: 'B', asignados: 0, maximo: 0, diferencia: 0 },
-    { nombre: 'C', asignados: 0, maximo: 0, diferencia: 0 },
+    { nombre: 'A', asignados: 1, maximo: 0, diferencia: 0 },
+    { nombre: 'B', asignados: 1, maximo: 0, diferencia: 0 },
+    { nombre: 'C', asignados: 1, maximo: 0, diferencia: 0 },
   ]);
 
   const [recursosDisponibles, setRecursosDisponibles] = useState(0);
   const [recursosTotales, setRecursosTotales] = useState(0);
   const [mensajes, setMensajes] = useState([]);
   const [datosGenerados, setDatosGenerados] = useState(false);
+  const [esEjecucionCompletaPosible, setEsEjecucionCompletaPosible] = useState(true);
 
   function generarValoresUnicos() {
     const valoresUnicos = new Set();
@@ -24,7 +25,8 @@ function App() {
   const generarDatos = () => {
     const maximos = generarValoresUnicos();
     const nuevosProcesos = procesos.map((proceso, index) => {
-      const asignados = Math.floor(Math.random() * maximos[index]);
+      // Asegurar que los recursos asignados sean al menos 1
+      const asignados = Math.max(1, Math.floor(Math.random() * maximos[index]));
       const diferencia = maximos[index] - asignados;
       return {
         ...proceso,
@@ -37,17 +39,35 @@ function App() {
     // Calcula la sumatoria de recursos asignados
     const totalAsignados = nuevosProcesos.reduce((acc, proceso) => acc + proceso.asignados, 0);
     
-    // Recursos disponibles iniciales aleatorios independientes de la sumatoria de asignados
+    // Recursos disponibles iniciales aleatorios
     const recursosDisponiblesIniciales = Math.floor(Math.random() * 6);
 
     setProcesos(nuevosProcesos);
     setRecursosDisponibles(recursosDisponiblesIniciales);
     setRecursosTotales(totalAsignados + recursosDisponiblesIniciales); // Recursos Totales
+
+    // Comprobar si todos los procesos pueden ejecutarse con los recursos disponibles iniciales
+    const ejecucionPosible = nuevosProcesos.every(proceso => proceso.diferencia <= recursosDisponiblesIniciales);
+
+    setEsEjecucionCompletaPosible(ejecucionPosible);
     setDatosGenerados(true);
-    setMensajes(['✅ Datos generados y condiciones cumplidas']);
+    
+    const mensajesIniciales = ['✅ Datos generados y condiciones cumplidas'];
+    if (!ejecucionPosible) {
+      mensajesIniciales.push('⚠️ No es posible procesar todos los procesos con los recursos iniciales disponibles.');
+    }
+    setMensajes(mensajesIniciales);
   };
 
   const comenzarSimulacion = () => {
+    if (!esEjecucionCompletaPosible) {
+      setMensajes(prevMensajes => [
+        ...prevMensajes,
+        '⚠️ No se puede iniciar la simulación porque no es posible procesar todos los procesos con los recursos disponibles iniciales.',
+      ]);
+      return;
+    }
+
     let recursos = recursosDisponibles;
     let colaProcesos = [...procesos];
     let nuevosMensajes = [];
