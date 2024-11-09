@@ -2,73 +2,32 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
+  // Estados iniciales de los procesos y recursos
   const [procesos, setProcesos] = useState([
-    { nombre: 'A', asignados: 1, maximo: 0, diferencia: 0 },
-    { nombre: 'B', asignados: 1, maximo: 0, diferencia: 0 },
-    { nombre: 'C', asignados: 1, maximo: 0, diferencia: 0 },
+    { nombre: 'A', asignados: 0, maximo: 0, diferencia: 0 },
+    { nombre: 'B', asignados: 0, maximo: 0, diferencia: 0 },
+    { nombre: 'C', asignados: 0, maximo: 0, diferencia: 0 },
   ]);
 
+  // Estado de los recursos disponibles iniciales
   const [recursosDisponibles, setRecursosDisponibles] = useState(0);
-  const [recursosTotales, setRecursosTotales] = useState(0);
   const [mensajes, setMensajes] = useState([]);
   const [datosGenerados, setDatosGenerados] = useState(false);
-  const [esEjecucionCompletaPosible, setEsEjecucionCompletaPosible] = useState(true);
 
+  // Generar valores únicos para Necesidad Máxima
   function generarValoresUnicos() {
     const valoresUnicos = new Set();
     while (valoresUnicos.size < 3) {
-      valoresUnicos.add(Math.floor(Math.random() * 5) + 3);
+      valoresUnicos.add(Math.floor(Math.random() * 5) + 3); // Valores entre 3 y 7
     }
     return Array.from(valoresUnicos);
   }
-    function prevenirBloqueo(procesos, recursosDisponiblesIniciales) {
-      let recursosDisponibles = recursosDisponiblesIniciales;
-      let secuenciaSegura = [];  // Para almacenar el orden seguro de ejecución
-      let procesosPendientes = [...procesos];  // Copia de los procesos sin ejecutar
 
-      // Repetir hasta que no haya más procesos por ejecutar
-      while (procesosPendientes.length > 0) {
-          let procesoEjecutado = false;
-
-          // Buscar un proceso que pueda ejecutarse con los recursos actuales
-          for (let i = 0; i < procesosPendientes.length; i++) {
-              const proceso = procesosPendientes[i];
-
-              // Si la "Diferencia" (necesidad) del proceso es menor o igual a los recursos disponibles
-              if (proceso.diferencia <= recursosDisponibles) {
-                  // Ejecutar el proceso: sumar recursos asignados al total disponible
-                  recursosDisponibles += proceso.recursosAsignados;
-                  
-                  // Añadir el proceso a la secuencia segura
-                  secuenciaSegura.push(proceso.nombre);
-
-                  // Remover el proceso de la lista de pendientes
-                  procesosPendientes.splice(i, 1);
-
-                  // Indicar que un proceso fue ejecutado en este ciclo
-                  procesoEjecutado = true;
-
-                  // Registrar el estado para feedback en la simulación
-                  console.log(`✅ Ejecutando proceso ${proceso.nombre}. Recursos disponibles ahora: ${recursosDisponibles}`);
-                  break; // Salimos del for para volver al inicio del while con los recursos actualizados
-              }
-          }
-
-          // Si ningún proceso pudo ejecutarse en este ciclo, es porque estamos en riesgo de bloqueo
-          if (!procesoEjecutado) {
-              console.warn("⚠️ No fue posible procesar todos los procesos debido a insuficientes recursos disponibles.");
-              return false;  // Retornar indicando que no se pudo encontrar una secuencia segura
-          }
-      }
-
-      console.log("✅ Todos los procesos han sido procesados en el siguiente orden:", secuenciaSegura);
-      return true;  // Retornar indicando que la secuencia segura fue encontrada
-  }
+  // Función para generar los datos de los procesos
   const generarDatos = () => {
     const maximos = generarValoresUnicos();
     const nuevosProcesos = procesos.map((proceso, index) => {
-      // Asegurar que los recursos asignados sean al menos 1
-      const asignados = Math.max(1, Math.floor(Math.random() * maximos[index]));
+      const asignados = Math.floor(Math.random() * maximos[index]);
       const diferencia = maximos[index] - asignados;
       return {
         ...proceso,
@@ -78,83 +37,51 @@ function App() {
       };
     });
 
-    // Calcula la sumatoria de recursos asignados
-    const totalAsignados = nuevosProcesos.reduce((acc, proceso) => acc + proceso.asignados, 0);
-    
-    // Recursos disponibles iniciales aleatorios
-    const recursosDisponiblesIniciales = Math.floor(Math.random() * 6);
+    // Generar recursos disponibles y asegurar la condición de disponibilidad
+    let recursosDisponiblesIniciales;
+    do {
+      recursosDisponiblesIniciales = Math.floor(Math.random() * 6); // Valores entre 0 y 5
+    } while (!nuevosProcesos.some((p) => p.diferencia <= recursosDisponiblesIniciales));
 
     setProcesos(nuevosProcesos);
     setRecursosDisponibles(recursosDisponiblesIniciales);
-    setRecursosTotales(totalAsignados + recursosDisponiblesIniciales); // Recursos Totales
-
-    // Comprobar si todos los procesos pueden ejecutarse con los recursos disponibles iniciales
-    const ejecucionPosible = nuevosProcesos.every(proceso => proceso.diferencia <= recursosDisponiblesIniciales);
-
-    setEsEjecucionCompletaPosible(ejecucionPosible);
     setDatosGenerados(true);
-    
-    const mensajesIniciales = ['✅ Datos generados y condiciones cumplidas'];
-    if (!ejecucionPosible) {
-      mensajesIniciales.push('⚠️ No es posible procesar todos los procesos con los recursos iniciales disponibles.');
-    }
-    setMensajes(mensajesIniciales);
+    setMensajes(['✅ Datos generados y condiciones cumplidas']);
   };
 
+  // Función para simular el algoritmo del banquero
   const comenzarSimulacion = () => {
-    if (!esEjecucionCompletaPosible) {
-      setMensajes(prevMensajes => [
-        ...prevMensajes,
-        '⚠️ No se puede iniciar la simulación porque no es posible procesar todos los procesos con los recursos disponibles iniciales.',
-      ]);
-      return;
-    }
-
     let recursos = recursosDisponibles;
-    let colaProcesos = [...procesos];
-    let nuevosMensajes = [];
-    let procesados = new Set();
-    let cambiosRealizados = true;
+    const colaProcesos = [...procesos].sort((a, b) => a.maximo - b.maximo); // Ordena procesos por necesidad máxima
+    const nuevosMensajes = [];
 
-    while (procesados.size < procesos.length && cambiosRealizados) {
-      cambiosRealizados = false;
-
-      colaProcesos.forEach((proceso) => {
-        if (!procesados.has(proceso.nombre) && proceso.diferencia <= recursos) {
-          nuevosMensajes.push(`🟢 Otorgando recursos al proceso ${proceso.nombre} (Recursos Disponibles: ${recursos} - Diferencia: ${proceso.diferencia})`);
-          
-          // Resta los recursos de la diferencia para ejecutar el proceso
-          recursos -= proceso.diferencia;
-          nuevosMensajes.push(`🟢 READY - Proceso ${proceso.nombre} está en ejecución.`);
-          
-          // Al devolver los recursos, muestra el cálculo realizado
-          const recursosPrevios = recursos;
-          recursos += proceso.maximo;
-          nuevosMensajes.push(`🔄 Devolviendo recursos de ${proceso.nombre} (Recursos Disponibles: ${recursosPrevios} + Necesidad Máxima: ${proceso.maximo}) = ${recursos}`);
-          
-          // Marca el proceso como procesado y registra que hubo un cambio
-          procesados.add(proceso.nombre);
-          cambiosRealizados = true;
-        }
-      });
-
-      if (!cambiosRealizados) {
-        nuevosMensajes.push('⚠️ No se pueden procesar más procesos sin riesgo de bloqueo.');
+    colaProcesos.forEach((proceso) => {
+      if (proceso.diferencia <= recursos) {
+        nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} entra (Recursos Disponibles: ${recursos} - Diferencia: ${proceso.diferencia})`);
+        
+        // Reducir recursos
+        recursos -= proceso.diferencia;
+        
+        nuevosMensajes.push(`🔄 Proceso ${proceso.nombre} ejecutándose. Recursos actuales: ${recursos}`);
+        
+        // Proceso libera sus recursos máximos al salir
+        recursos += proceso.maximo;
+        
+        nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} sale y devuelve ${proceso.maximo} recursos. Recursos actuales: ${recursos}`);
+      } else {
+        // Proceso espera si no hay suficientes recursos
+        nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
       }
-    }
+    });
 
-    if (procesados.size === procesos.length) {
-      nuevosMensajes.push('✅ Todos los procesos han sido procesados sin bloqueos.');
-    } else {
-      nuevosMensajes.push('⚠️ No fue posible procesar todos los procesos debido a insuficientes recursos disponibles.');
-    }
-
+    nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
     setMensajes(nuevosMensajes);
   };
 
   return (
     <div className="App">
       <h1>Algoritmo del Banquero - Prevención de Bloqueos</h1>
+
       <button onClick={generarDatos}>Generar Datos</button>
       <button onClick={comenzarSimulacion} disabled={!datosGenerados}>
         Empezar Prevención de Bloqueos
@@ -183,7 +110,6 @@ function App() {
       </table>
 
       <h3>Recursos Disponibles Iniciales: {recursosDisponibles}</h3>
-      <h3>Recursos Totales: {recursosTotales}</h3>
 
       <h2>Estado de Simulación</h2>
       <div className="simulacion">
