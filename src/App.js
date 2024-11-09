@@ -1,131 +1,117 @@
 import React, { useState } from 'react';
+import './App.css';
 
-const App = () => {
-  const [procesos, setProcesos] = useState([]);
-  const [recursosDisponiblesIniciales, setRecursosDisponiblesIniciales] = useState(5);
-  const [recursosTotales, setRecursosTotales] = useState(0);
-  const [log, setLog] = useState([]);
-  const [secuenciaSegura, setSecuenciaSegura] = useState([]);
+function App() {
+  const [processes, setProcesses] = useState([
+    { name: 'A', assigned: 0, maxNeed: 0, difference: 0 },
+    { name: 'B', assigned: 0, maxNeed: 0, difference: 0 },
+    { name: 'C', assigned: 0, maxNeed: 0, difference: 0 },
+  ]);
+  const [availableResources, setAvailableResources] = useState(0); // Variable para recursos disponibles
+  const [message, setMessage] = useState('');
+  const [simulationLog, setSimulationLog] = useState([]);
+  
+  // Generación de datos aleatorios únicos
+  const generateData = () => {
+    const assignedResources = processes.map(() => Math.floor(Math.random() * 3) + 1); // Recursos asignados entre 1 y 3
+    const maxNeeds = Array.from(new Set([4, 5, 6])).sort(() => 0.5 - Math.random()); // Valores únicos de Necesidad Máxima
 
-  // Genera datos aleatorios para los procesos
-  const generarDatos = () => {
-    const nuevosProcesos = [
-      { nombre: 'A', recursosAsignados: 1, necesidadMaxima: 6 },
-      { nombre: 'B', recursosAsignados: 2, necesidadMaxima: 3 },
-      { nombre: 'C', recursosAsignados: 1, necesidadMaxima: 7 },
-    ];
-
-    const totalAsignados = nuevosProcesos.reduce((sum, proceso) => sum + proceso.recursosAsignados, 0);
-    setRecursosTotales(totalAsignados + recursosDisponiblesIniciales);
-    
-    const procesosConDiferencia = nuevosProcesos.map(proceso => ({
-      ...proceso,
-      diferencia: proceso.necesidadMaxima - proceso.recursosAsignados,
+    // Recalcular la diferencia y generar la tabla
+    const newProcesses = processes.map((process, index) => ({
+      ...process,
+      assigned: assignedResources[index],
+      maxNeed: maxNeeds[index],
+      difference: maxNeeds[index] - assignedResources[index]
     }));
+
+    // Genera un valor aleatorio de recursos disponibles entre 0 y 5
+    const randomAvailable = Math.floor(Math.random() * 6);
+    setAvailableResources(randomAvailable);
     
-    setProcesos(procesosConDiferencia);
-    setLog(['✅ Datos generados y condiciones cumplidas']);
-    setSecuenciaSegura([]);
+    // Comprobar si se cumplen las condiciones para algún proceso
+    const valid = newProcesses.some(process => process.difference <= randomAvailable);
+    setMessage(valid ? "✅ Datos generados y condiciones cumplidas" : "❌ Las condiciones no se cumplen");
+    setProcesses(newProcesses);
+    setSimulationLog([]); // Limpia el log de simulación
   };
 
-  // Simula el algoritmo del banquero para evitar bloqueos
-  const prevenirBloqueo = () => {
-    let recursosDisponibles = recursosDisponiblesIniciales;
-    let secuencia = [];
-    let procesosPendientes = [...procesos];
-    let simulacionLog = [];
+  // Simulación de prevención de bloqueos
+  const startSimulation = () => {
+    let resources = availableResources;
+    const log = [];
+    const processQueue = [...processes].sort((a, b) => a.maxNeed - b.maxNeed); // Ordena por necesidad máxima
 
-    while (procesosPendientes.length > 0) {
-      let procesoEjecutado = false;
+    processQueue.forEach(process => {
+      if (process.difference <= resources) {
+        // Proceso puede entrar
+        log.push(`🟢 Otorgando recursos al proceso ${process.name}: ${resources} - ${process.difference} = ${resources - process.difference}`);
+        resources -= process.difference;
 
-      for (let i = 0; i < procesosPendientes.length; i++) {
-        const proceso = procesosPendientes[i];
+        // Estado "READY"
+        log.push(`⚙️ Proceso ${process.name} - READY`);
 
-        if (proceso.diferencia <= recursosDisponibles) {
-          simulacionLog.push(`🟢 Otorgando recursos al proceso ${proceso.nombre} (Recursos Disponibles: ${recursosDisponibles} - Diferencia: ${proceso.diferencia})`);
-          recursosDisponibles += proceso.recursosAsignados;
-          secuencia.push(proceso.nombre);
-
-          simulacionLog.push(`✅ READY - Proceso ${proceso.nombre} está en ejecución.`);
-          simulacionLog.push(`🔄 Devolviendo recursos de ${proceso.nombre} (Recursos Disponibles: ${recursosDisponibles - proceso.necesidadMaxima} + Necesidad Máxima: ${proceso.necesidadMaxima}) = ${recursosDisponibles}`);
-
-          // Remover el proceso de la lista de pendientes
-          procesosPendientes.splice(i, 1);
-          procesoEjecutado = true;
-          break;
-        }
+        // Proceso sale y devuelve sus recursos
+        log.push(`🔄 Devolviendo recursos del proceso ${process.name}: ${resources} + ${process.maxNeed} = ${resources + process.maxNeed}`);
+        resources += process.maxNeed;
+      } else {
+        // Proceso no puede entrar, espera
+        log.push(`🟡 Proceso ${process.name} - Esperando (Diferencia: ${process.difference}, Recursos Disponibles: ${resources})`);
       }
+    });
 
-      if (!procesoEjecutado) {
-        simulacionLog.push("⚠️ No se pueden procesar más procesos sin riesgo de bloqueo.");
-        simulacionLog.push("⚠️ No fue posible procesar todos los procesos debido a insuficientes recursos disponibles.");
-        setLog(simulacionLog);
-        setSecuenciaSegura([]);
-        return;
-      }
-    }
-
-    simulacionLog.push("✅ Todos los procesos han sido procesados en el siguiente orden: " + secuencia.join(', '));
-    setLog(simulacionLog);
-    setSecuenciaSegura(secuencia);
+    // Actualización de logs y mensaje final
+    log.push("✅ Todos los procesos han sido procesados.");
+    setSimulationLog(log);
+    setAvailableResources(resources); // Actualiza el estado final de recursos disponibles
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial', color: '#fff', backgroundColor: '#222', minHeight: '100vh' }}>
-      <h1>Algoritmo del Banquero - Prevención de Bloqueos</h1>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button onClick={generarDatos} style={buttonStyle}>Generar Datos</button>
-        <button onClick={prevenirBloqueo} style={buttonStyle}>Empezar Prevención de Bloqueos</button>
+    <div className="App">
+      <header className="App-header">
+        <h1>Algoritmo del Banquero - Prevención de Bloqueos</h1>
+      </header>
+      
+      <div className="controls">
+        <button onClick={generateData}>Generar Datos</button>
+        <button onClick={startSimulation}>Empezar Prevención de Bloques</button>
       </div>
-      <h2>Tabla de Procesos</h2>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th>Proceso</th>
-            <th>Recursos Asignados</th>
-            <th>Necesidad Máxima</th>
-            <th>Diferencia</th>
-          </tr>
-        </thead>
-        <tbody>
-          {procesos.map((proceso, index) => (
-            <tr key={index}>
-              <td>{proceso.nombre}</td>
-              <td>{proceso.recursosAsignados}</td>
-              <td>{proceso.necesidadMaxima}</td>
-              <td>{proceso.diferencia}</td>
+      
+      <div className="table-section">
+        <h2>Tabla de Procesos</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Proceso</th>
+              <th>Recursos Asignados</th>
+              <th>Necesidad Máxima</th>
+              <th>Diferencia</th>
             </tr>
+          </thead>
+          <tbody>
+            {processes.map((process, index) => (
+              <tr key={index}>
+                <td>{process.name}</td>
+                <td>{process.assigned}</td>
+                <td>{process.maxNeed}</td>
+                <td>{process.difference}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      <div className="status">
+        <h2>Estado de Simulación</h2>
+        <p>Recursos Disponibles Iniciales: {availableResources}</p>
+        <p>{message}</p>
+        <div className="simulation-log">
+          {simulationLog.map((entry, index) => (
+            <p key={index}>{entry}</p>
           ))}
-        </tbody>
-      </table>
-      <h3>Recursos Disponibles Iniciales: {recursosDisponiblesIniciales}</h3>
-      <h3>Recursos Totales: {recursosTotales}</h3>
-      <h2>Estado de Simulación</h2>
-      <div style={{ backgroundColor: '#333', padding: '10px', borderRadius: '5px' }}>
-        {log.map((line, index) => (
-          <div key={index} style={{ marginBottom: '5px' }}>
-            {line}
-          </div>
-        ))}
+        </div>
       </div>
     </div>
   );
-};
-
-const buttonStyle = {
-  padding: '10px 20px',
-  backgroundColor: '#007bff',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-};
-
-const tableStyle = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  marginBottom: '20px',
-  backgroundColor: '#333',
-};
+}
 
 export default App;
