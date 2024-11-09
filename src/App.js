@@ -81,6 +81,12 @@ function App() {
 
   return (
     <div className="App">
+      {/* Header */}
+      <header className="header">
+        <img src="https://via.placeholder.com/50" alt="Logo de la universidad" className="logo" />
+        <p className="membrete">Universidad de Ejemplo - Facultad de Ingeniería - Algoritmos y Sistemas</p>
+      </header>
+
       <h1>Algoritmo del Banquero - Prevención de Bloqueos</h1>
 
       <button onClick={generarDatos}>Generar Datos</button>
