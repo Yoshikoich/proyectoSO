@@ -78,11 +78,6 @@ function App() {
     nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
     setMensajes(nuevosMensajes);
   };
-  
-
-  nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
-  setMensajes(nuevosMensajes);
-};
 
   return (
     <div className="App">
