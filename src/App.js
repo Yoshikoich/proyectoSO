@@ -46,15 +46,16 @@ function App() {
     setProcesos(nuevosProcesos);
     setRecursosDisponibles(recursosDisponiblesIniciales);
     setDatosGenerados(true);
-    setMensajes(['✅ Datos generados y condiciones cumplidas']);
+    setMensajes(['✅ Datos generados y condiciones revisadas']);
   };
 
   // Función para simular el algoritmo del banquero
   const comenzarSimulacion = () => {
     let recursos = recursosDisponibles;
-    const colaProcesos = [...procesos].sort((a, b) => a.maximo - b.maximo); // Ordena procesos por necesidad máxima
+    // Ordena procesos por la diferencia (necesidad restante) para tratar de cumplir los más pequeños primero
+    const colaProcesos = [...procesos].sort((a, b) => a.diferencia - b.diferencia);
     const nuevosMensajes = [];
-
+  
     colaProcesos.forEach((proceso) => {
       if (proceso.diferencia <= recursos) {
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} entra (Recursos Disponibles: ${recursos} - Diferencia: ${proceso.diferencia})`);
@@ -73,10 +74,15 @@ function App() {
         nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
       }
     });
-
+  
     nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
     setMensajes(nuevosMensajes);
   };
+  
+
+  nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
+  setMensajes(nuevosMensajes);
+};
 
   return (
     <div className="App">
@@ -119,6 +125,6 @@ function App() {
       </div>
     </div>
   );
-}
+
 
 export default App;
