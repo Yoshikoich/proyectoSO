@@ -21,7 +21,49 @@ function App() {
     }
     return Array.from(valoresUnicos);
   }
+    function prevenirBloqueo(procesos, recursosDisponiblesIniciales) {
+      let recursosDisponibles = recursosDisponiblesIniciales;
+      let secuenciaSegura = [];  // Para almacenar el orden seguro de ejecución
+      let procesosPendientes = [...procesos];  // Copia de los procesos sin ejecutar
 
+      // Repetir hasta que no haya más procesos por ejecutar
+      while (procesosPendientes.length > 0) {
+          let procesoEjecutado = false;
+
+          // Buscar un proceso que pueda ejecutarse con los recursos actuales
+          for (let i = 0; i < procesosPendientes.length; i++) {
+              const proceso = procesosPendientes[i];
+
+              // Si la "Diferencia" (necesidad) del proceso es menor o igual a los recursos disponibles
+              if (proceso.diferencia <= recursosDisponibles) {
+                  // Ejecutar el proceso: sumar recursos asignados al total disponible
+                  recursosDisponibles += proceso.recursosAsignados;
+                  
+                  // Añadir el proceso a la secuencia segura
+                  secuenciaSegura.push(proceso.nombre);
+
+                  // Remover el proceso de la lista de pendientes
+                  procesosPendientes.splice(i, 1);
+
+                  // Indicar que un proceso fue ejecutado en este ciclo
+                  procesoEjecutado = true;
+
+                  // Registrar el estado para feedback en la simulación
+                  console.log(`✅ Ejecutando proceso ${proceso.nombre}. Recursos disponibles ahora: ${recursosDisponibles}`);
+                  break; // Salimos del for para volver al inicio del while con los recursos actualizados
+              }
+          }
+
+          // Si ningún proceso pudo ejecutarse en este ciclo, es porque estamos en riesgo de bloqueo
+          if (!procesoEjecutado) {
+              console.warn("⚠️ No fue posible procesar todos los procesos debido a insuficientes recursos disponibles.");
+              return false;  // Retornar indicando que no se pudo encontrar una secuencia segura
+          }
+      }
+
+      console.log("✅ Todos los procesos han sido procesados en el siguiente orden:", secuenciaSegura);
+      return true;  // Retornar indicando que la secuencia segura fue encontrada
+  }
   const generarDatos = () => {
     const maximos = generarValoresUnicos();
     const nuevosProcesos = procesos.map((proceso, index) => {
