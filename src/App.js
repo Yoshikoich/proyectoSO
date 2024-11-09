@@ -49,21 +49,13 @@ function App() {
     setMensajes(['✅ Datos generados y condiciones revisadas']);
   };
 
-  // Función para simular el algoritmo del banquero con la condición adicional
+  // Función para simular el algoritmo del banquero
   const comenzarSimulacion = () => {
-    // Verificar si existe al menos un proceso que pueda ejecutarse con los recursos actuales
-    const puedeEjecutarProceso = procesos.some((proceso) => proceso.diferencia <= recursosDisponibles);
-
-    if (!puedeEjecutarProceso) {
-      setMensajes(['⚠️ No hay suficientes recursos para satisfacer al menos un proceso.']);
-      return;
-    }
-
     let recursos = recursosDisponibles;
     // Ordena procesos por la diferencia (necesidad restante) para tratar de cumplir los más pequeños primero
     const colaProcesos = [...procesos].sort((a, b) => a.diferencia - b.diferencia);
     const nuevosMensajes = [];
-
+  
     colaProcesos.forEach((proceso) => {
       if (proceso.diferencia <= recursos) {
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} entra (Recursos Disponibles: ${recursos} - Diferencia: ${proceso.diferencia})`);
@@ -82,7 +74,7 @@ function App() {
         nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
       }
     });
-
+  
     nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
     setMensajes(nuevosMensajes);
   };
