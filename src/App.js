@@ -51,12 +51,11 @@ function App() {
 
   // Función para simular el algoritmo del banquero con la condición adicional
   const comenzarSimulacion = () => {
-    const maximoRequerido = Math.max(...procesos.map(p => p.maximo));
-    const totalDisponibles = recursosDisponibles + procesos.reduce((acc, p) => acc + p.asignados, 0);
+    // Verificar si existe al menos un proceso que pueda ejecutarse con los recursos actuales
+    const puedeEjecutarProceso = procesos.some((proceso) => proceso.diferencia <= recursosDisponibles);
 
-    // Verificar si la suma de los recursos disponibles es suficiente
-    if (totalDisponibles < maximoRequerido) {
-      setMensajes(['⚠️ No hay suficientes recursos para satisfacer el proceso con la mayor necesidad.']);
+    if (!puedeEjecutarProceso) {
+      setMensajes(['⚠️ No hay suficientes recursos para satisfacer al menos un proceso.']);
       return;
     }
 
