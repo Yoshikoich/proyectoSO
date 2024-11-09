@@ -37,20 +37,6 @@ function App() {
       };
     });
 
-     // Calcular el total de recursos necesarios
-     const maximoTotal = nuevosProcesos.reduce((total, proceso) => total + proceso.maximo, 0);
-    
-     // Verificar si la necesidad máxima total excede los recursos disponibles iniciales
-     if (maximoTotal > recursosDisponiblesIniciales) {
-       setMensajes([
-         '⚠️ La necesidad máxima total de los procesos excede los recursos disponibles.',
-         'No se podrá realizar la prevención de bloqueo.',
-       ]);
-     } else {
-       setMensajes(['✅ Datos generados y condiciones revisadas']);
-     }
-   };
-
     // Generar recursos disponibles y asegurar la condición de disponibilidad
     let recursosDisponiblesIniciales;
     do {
@@ -60,7 +46,19 @@ function App() {
     setProcesos(nuevosProcesos);
     setRecursosDisponibles(recursosDisponiblesIniciales);
     setDatosGenerados(true);
-    setMensajes(['✅ Datos generados y condiciones revisadas']);
+
+    // Calcular el total de recursos necesarios
+    const maximoTotal = nuevosProcesos.reduce((total, proceso) => total + proceso.maximo, 0);
+    
+    // Verificar si la necesidad máxima total excede los recursos disponibles iniciales
+    if (maximoTotal > recursosDisponiblesIniciales) {
+      setMensajes([
+        '⚠️ Advertencia: La necesidad máxima total de los procesos excede los recursos disponibles.',
+        'Esto significa que algún proceso podría quedar bloqueado inevitablemente.',
+      ]);
+    } else {
+      setMensajes(['✅ Datos generados y condiciones revisadas']);
+    }
   };
 
   // Función para simular el algoritmo del banquero
@@ -69,7 +67,7 @@ function App() {
     // Ordena procesos por la diferencia (necesidad restante) para tratar de cumplir los más pequeños primero
     const colaProcesos = [...procesos].sort((a, b) => a.diferencia - b.diferencia);
     const nuevosMensajes = [];
-  
+
     colaProcesos.forEach((proceso) => {
       if (proceso.diferencia <= recursos) {
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} entra (Recursos Disponibles: ${recursos} - Diferencia: ${proceso.diferencia})`);
@@ -88,7 +86,7 @@ function App() {
         nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
       }
     });
-  
+
     nuevosMensajes.push('✅ Todos los procesos han sido procesados.');
     setMensajes(nuevosMensajes);
   };
