@@ -3,7 +3,7 @@
 
 Pagina de Vercel : [click aca](https://proyecto-so-two.vercel.app/).
 
-Hice una pagina con vercel donde puede ver el front end de la pagina y la simulación. Dentro de la carpeta src, en app.js allí esta el codigo con explicación en los comentarios. Debido a la naturaleza de aplicaciones con react, la mayoria de los archivos fue creado automaticamente, lo unico editado fue app.js y app.css para darle estilo a la pagina. 
+Hice una pagina con vercel donde puede ver el front end de la pagina y la simulación, todo creado usando solamente Visual Studio Code. Dentro de la carpeta src, en app.js allí esta el codigo con explicación en los comentarios. Debido a la naturaleza de aplicaciones con react, la mayoria de los archivos fue creado automaticamente, lo unico editado fue app.js y app.css para darle estilo a la pagina. 
 
 
 La idea de esto es simular el proceso visto en clase, en el codigo tiene una seccion donde todo el proceso ira correctamente si se cumplen ciertas condiciones. Las cuales se tomaron estas a la hora de realizarlo:
