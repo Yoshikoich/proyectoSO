@@ -1,5 +1,5 @@
 # Proyecto Sistemas Operativos 
-## Prevención de Bloqueos
+## Prevención de Bloqueos - Andrea Gómez
 
 Pagina de Vercel : [click aca](https://proyecto-so-two.vercel.app/).
 
