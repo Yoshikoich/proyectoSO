@@ -39,7 +39,7 @@ function App() {
       };
     });
 
-    // Generar recursos disponibles y asegurar la condición de disponibilidad
+    // Generar recursos disponibles y asegurar la condición de disponibilidad.
     let recursosDisponiblesIniciales;
     do {
       recursosDisponiblesIniciales = Math.floor(Math.random() * 6); // Valores entre 0 y 5
@@ -53,7 +53,7 @@ function App() {
     const totalRecursos = recursosDisponiblesIniciales + nuevosProcesos.reduce((total, proceso) => total + proceso.asignados, 0);
     setTotalRecursosSistema(totalRecursos); // Guardar en el estado
 
-    // Calcular el valor máximo entre las necesidades máximas de todos los procesos
+    // Calcular el valor máximo entre las necesidades máximas de todos los procesos. Esto para la condición y que sea facilmente visible.
     const maximoNecesidad = Math.max(...nuevosProcesos.map(proceso => proceso.maximo));
     setMaximoTotal(maximoNecesidad); // Guardar en el estado `maximoTotal`
 
@@ -61,7 +61,7 @@ function App() {
     if (maximoNecesidad > totalRecursos) {
       setMensajes([
         '⚠️ Advertencia: La necesidad máxima de algún proceso excede la cantidad total de recursos en el sistema.',
-        'Esto significa que algún proceso podría quedar bloqueado inevitablemente.',
+        'Por lo tanto un proceso o varios procesos no podran ser procesados.',
       ]);
     } else {
       setMensajes(['✅ Datos generados y condiciones revisadas']);
