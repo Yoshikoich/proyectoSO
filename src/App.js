@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  // Estados iniciales de los procesos y recursos
+  // Un array de estados iniciales de los procesos y recursos, se le coloca inicialmente 0 para luego ser rellenado por datos random
   const [procesos, setProcesos] = useState([
     { nombre: 'A', asignados: 0, maximo: 0, diferencia: 0 },
     { nombre: 'B', asignados: 0, maximo: 0, diferencia: 0 },
@@ -10,36 +10,36 @@ function App() {
   ]);
 
   // Estado de los recursos disponibles iniciales
-  const [recursosDisponibles, setRecursosDisponibles] = useState(0);
-  const [totalRecursosSistema, setTotalRecursosSistema] = useState(0);
-  const [maximoTotal, setMaximoTotal] = useState(0); // Nuevo estado para el Máximo Total
-  const [mensajes, setMensajes] = useState([]);
-  const [datosGenerados, setDatosGenerados] = useState(false);
+  const [recursosDisponibles, setRecursosDisponibles] = useState(0); // Número de recursos actualmente disponibles para asignar.
+  const [totalRecursosSistema, setTotalRecursosSistema] = useState(0); // Total de recursos en el sistema, que es la suma de recursosDisponibles y la suma de los asignados de todos los procesos.
+  const [maximoTotal, setMaximoTotal] = useState(0); // El valor más alto de maximo entre todos los procesos, indicando la necesidad máxima del proceso más demandante
+  const [mensajes, setMensajes] = useState([]); // Esto es para el aviso para la simulación
+  const [datosGenerados, setDatosGenerados] = useState(false); // Esto avisa que los datos iniciales han sido generados o no, para poder activar el boton de simulación
 
-  // Generar valores únicos para Necesidad Máxima
+  // Generar valores únicos para Necesidad Máxima, esto es para que posteriormente empiece con el proceso con la necesidad maxima menor
   function generarValoresUnicos() {
-    const valoresUnicos = new Set();
+    const valoresUnicos = new Set(); // usamos set para que no haya duplicados
     while (valoresUnicos.size < 3) {
-      valoresUnicos.add(Math.floor(Math.random() * 5) + 3); // Valores entre 3 y 7
+      valoresUnicos.add(Math.floor(Math.random() * 5) + 3); // Valores entre 3 y 7, escogido por gusto, puede ser cambiado
     }
-    return Array.from(valoresUnicos);
+    return Array.from(valoresUnicos); // Convertimos el set en un array
   }
 
-  // Función para generar los datos de los procesos
+  // Función para generar los datos de los procesos, 
   const generarDatos = () => {
-    const maximos = generarValoresUnicos();
+    const maximos = generarValoresUnicos(); // llamamos a la función para generar valores no duplicados
     const nuevosProcesos = procesos.map((proceso, index) => {
-      const asignados = Math.floor(Math.random() * maximos[index]);
-      const diferencia = maximos[index] - asignados;
+      const asignados = Math.floor(Math.random() * maximos[index]); 
+      const diferencia = maximos[index] - asignados; // Se calcula la diferencia para la tabla
       return {
         ...proceso,
         asignados,
         maximo: maximos[index],
-        diferencia,
+        diferencia, //regresamos todos los valores generados para la tabla
       };
     });
 
-    // Generar recursos disponibles y asegurar la condición de disponibilidad.
+    // Generar recursos disponibles y asegurar la condición de disponibilidad. Esto es para revisar que haya al menos un valor menor en diferencia cuando se ve los recursos disponibles iniciales 
     let recursosDisponiblesIniciales;
     do {
       recursosDisponiblesIniciales = Math.floor(Math.random() * 6); // Valores entre 0 y 5
@@ -61,17 +61,17 @@ function App() {
     if (maximoNecesidad > totalRecursos) {
       setMensajes([
         '⚠️ Advertencia: La necesidad máxima de algún proceso excede la cantidad total de recursos en el sistema.',
-        'Por lo tanto un proceso o varios procesos no podran ser procesados.',
+        'Por lo tanto un proceso o varios procesos serian bloqueados.',
       ]);
     } else {
       setMensajes(['✅ Datos generados y condiciones revisadas']);
     }
   };
 
-  // Función para simular el algoritmo del banquero
+  // Función para simular el algoritmo de prevención de bloqueos vista en clase
   const comenzarSimulacion = () => {
-    let recursos = recursosDisponibles;
-    // Ordena procesos por la diferencia (necesidad restante) para tratar de cumplir los más pequeños primero
+    let recursos = recursosDisponibles; // recursos disponibles en el momento de darle a empezar simulacion
+    // Ordena procesos por la diferencia (necesidad restante) para tratar de cumplir los más pequeños primero. Eso lo hace sort
     const colaProcesos = [...procesos].sort((a, b) => a.diferencia - b.diferencia);
     const nuevosMensajes = [];
 
@@ -89,7 +89,7 @@ function App() {
         
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} sale y devuelve ${proceso.maximo} recursos. Recursos actuales: ${recursos}`);
       } else {
-        // Proceso espera si no hay suficientes recursos
+        // Proceso espera si no hay suficientes recursos, esto es cuando le das click a empezar simulación luego de ver la advertencia 
         nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
       }
     });
@@ -98,6 +98,7 @@ function App() {
     setMensajes(nuevosMensajes);
   };
 
+  // a partir de acá es mas lo que seria el html de la pagina donde se llaman las funciones para realizar la simulación
   return (
     <div className="App">
       {/* Header */}
