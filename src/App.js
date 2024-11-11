@@ -15,6 +15,7 @@ function App() {
   const [maximoTotal, setMaximoTotal] = useState(0); // El valor más alto de maximo entre todos los procesos, indicando la necesidad máxima del proceso más demandante
   const [mensajes, setMensajes] = useState([]); // Esto es para el aviso para la simulación
   const [datosGenerados, setDatosGenerados] = useState(false); // Esto avisa que los datos iniciales han sido generados o no, para poder activar el boton de simulación
+  const [progreso, setProgreso] = useState(0); // Estado de progreso de la barra
 
   // Generar valores únicos para Necesidad Máxima, esto es para que posteriormente empiece con el proceso con la necesidad maxima menor
   function generarValoresUnicos() {
@@ -66,6 +67,9 @@ function App() {
     } else {
       setMensajes(['✅ Datos generados y condiciones revisadas']);
     }
+
+    // Reiniciar el progreso
+    setProgreso(0);
   };
 
   // Función para simular el algoritmo de prevención de bloqueos vista en clase
@@ -75,7 +79,7 @@ function App() {
     const colaProcesos = [...procesos].sort((a, b) => a.diferencia - b.diferencia);
     const nuevosMensajes = [];
 
-    colaProcesos.forEach((proceso) => {
+    colaProcesos.forEach((proceso, index) => {
       if (proceso.diferencia <= recursos) {
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} entra (Recursos Disponibles: ${recursos} - Diferencia: ${proceso.diferencia})`);
         
@@ -88,6 +92,9 @@ function App() {
         recursos += proceso.maximo;
         
         nuevosMensajes.push(`🟢 Proceso ${proceso.nombre} sale y devuelve ${proceso.maximo} recursos. Recursos actuales: ${recursos}`);
+
+        // Actualizar el progreso
+        setProgreso(((index + 1) / colaProcesos.length) * 100);
       } else {
         // Proceso espera si no hay suficientes recursos, esto es cuando le das click a empezar simulación luego de ver la advertencia 
         nuevosMensajes.push(`🟡 Proceso ${proceso.nombre} - Espera por falta de recursos.`);
@@ -139,6 +146,13 @@ function App() {
       <h3>Recursos Disponibles Iniciales: {recursosDisponibles}</h3>
       <h3>Total de Recursos en el Sistema: {totalRecursosSistema}</h3>
       <h3>Máximo Total Necesario: {maximoTotal}</h3> {/* Nueva línea para mostrar el máximo total */}
+
+      {/* Barra de progreso */}
+      <div className="progress-bar-container">
+        <div className="progress-bar" style={{ width: `${progreso}%` }}>
+          {Math.round(progreso)}%
+        </div>
+      </div>
 
       <h2>Estado de Simulación</h2>
       <div className="simulacion">
